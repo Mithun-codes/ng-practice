@@ -1,93 +1,146 @@
-<div class="facet-container">
-  <div class="left">
-    <label>All Facets</label>
-    <ul id="allFacets" class="facet-list">
-      <li class="facet">Facet 2</li>
-      <li class="facet">Facet 3</li>
-      <li class="facet">Facet 5</li>
-    </ul>
-  </div>
-  <div class="right">
-    <label>User Facets</label>
-    <ul id="userFacets" class="facet-list">
-      <li class="facet">Facet 1</li>
-      <li class="facet">Facet 4</li>
-    </ul>
-  </div>
-</div>
-<p>Drag & drop to rearrange items within a list or between lists.</br>Double-click to move item from one list to the bottom of the other.</p>
+<ol data-draggable="target">
+  <li data-draggable="item">Item 0</li>
+  <li data-draggable="item">Item 1</li>
+  <li data-draggable="item">Item 2</li>
+  <li data-draggable="item">Item 3</li>
+</ol>
+
+<ol data-draggable="target">
+  <li data-draggable="item">Item 4</li>
+  <li data-draggable="item">Item 5</li>
+</ol>
+
+<ol data-draggable="target">
+  <li data-draggable="item">Item 6</li>
+  <li data-draggable="item">Item 7</li>
+</ol>
+
+<ol data-draggable="target">
+  <li data-draggable="item">Item 8</li>
+</ol>
+
+/* canvas styles */
+html, body
+{
+    font:normal normal normal 100%/1.4 tahoma, sans-serif;
+    background:#f9f9f9;
+    color:#000;
+}
+body
+{
+    font-size:0.8em;
+}
+
+/* draggable targets */
+[data-draggable="target"]
+{
+    float:left;
+    list-style-type:none;
+    
+    width:42%;
+    height:7.5em;
+    overflow-y:auto;
+    
+    margin:0 0.5em 0.5em 0;
+    padding:0.5em;
+    
+    border:2px solid #888;
+    border-radius:0.2em;
+    
+    background:#ddd;
+    color:#555;
+}
+
+/* draggable items */
+[data-draggable="item"]
+{
+    display:block;
+    list-style-type:none;
+    
+    margin:0 0 2px 0;
+    padding:0.2em 0.4em;
+    
+    border-radius:0.2em;
+    
+    line-height:1.3;
+}
 
 
 
-.facet-container{
-  width: 330px;
-}
-.right {
-  float: right;
-}
-.left {
-  float: left;
-}
-p {
-  clear: both;
-  padding-top: 1em;
-}
-.facet-list {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-  margin-right: 10px;
-  background: #eee;
-  padding: 5px;
-  width: 143px;
-  min-height: 1.5em;
-  font-size: 0.85em;
-}
-.facet-list li {
-  margin: 5px;
-  padding: 5px;
-  font-size: 1.2em;
-  width: 120px;
-}
-.facet-list li.placeholder {
-  height: 1.2em
-}
-.facet {
-  border: 1px solid #bbb;
-  background-color: #fafafa;
-  cursor: move;
-}
-.facet.ui-sortable-helper {
-  opacity: 0.5;
-}
-.placeholder {
-  border: 1px solid orange;
-  background-color: #fffffd;
-}
+(function()
+{
 
+    //exclude older browsers by the features we need them to support
+    //and legacy opera explicitly so we don't waste time on a dead browser
+    if
+    (
+        !document.querySelectorAll 
+        || 
+        !('draggable' in document.createElement('span')) 
+        || 
+        window.opera
+    ) 
+    { return; }
+    
+    //get the collection of draggable items and add their draggable attribute
+    for(var 
+        items = document.querySelectorAll('[data-draggable="item"]'), 
+        len = items.length, 
+        i = 0; i < len; i ++)
+    {
+        items[i].setAttribute('draggable', 'true');
+    }
 
+    //variable for storing the dragging item reference 
+    //this will avoid the need to define any transfer data 
+    //which means that the elements don't need to have IDs 
+    var item = null;
 
+    //dragstart event to initiate mouse dragging
+    document.addEventListener('dragstart', function(e)
+    {
+        //set the item reference to this element
+        item = e.target;
+        
+        //we don't need the transfer data, but we have to define something
+        //otherwise the drop action won't work at all in firefox
+        //most browsers support the proper mime-type syntax, eg. "text/plain"
+        //but we have to use this incorrect syntax for the benefit of IE10+
+        e.dataTransfer.setData('text', '');
+    
+    }, false);
 
+    //dragover event to allow the drag by preventing its default
+    //ie. the default action of an element is not to allow dragging 
+    document.addEventListener('dragover', function(e)
+    {
+        if(item)
+        {
+            e.preventDefault();
+        }
+    
+    }, false);  
 
-$(function() {
-    $("#allFacets, #userFacets").sortable({
-      connectWith: "ul",
-      placeholder: "placeholder",
-      delay: 150
-    })
-    .disableSelection()
-    .dblclick( function(e){
-      var item = e.target;
-      if (e.currentTarget.id === 'allFacets') {
-        //move from all to user
-        $(item).fadeOut('fast', function() {
-          $(item).appendTo($('#userFacets')).fadeIn('slow');
-        });
-      } else {
-        //move from user to all
-        $(item).fadeOut('fast', function() {
-          $(item).appendTo($('#allFacets')).fadeIn('slow');
-        });
-      }
-    });
-  });
+    //drop event to allow the element to be dropped into valid targets
+    document.addEventListener('drop', function(e)
+    {
+        //if this element is a drop target, move the item here 
+        //then prevent default to allow the action (same as dragover)
+        if(e.target.getAttribute('data-draggable') == 'target')
+        {
+            e.target.appendChild(item);
+            
+            e.preventDefault();
+        }
+    
+    }, false);
+    
+    //dragend event to clean-up after drop or abort
+    //which fires whether or not the drop target was valid
+    document.addEventListener('dragend', function(e)
+    {
+        item = null;
+    
+    }, false);
+
+})();   
